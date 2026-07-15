@@ -1,0 +1,32 @@
+{
+  "d": {
+    "results": [
+      {
+        "Pernr": "00123045",
+        "Ename": "N Velliyangiri",
+        "ProjectId": "90004-005",
+        "ProjectName": "Europe-EU",
+        "StartDate": "04/28/2025",
+        "EndDate": "12/31/9999",
+        "Allocation": "100.00",
+        "Resigned": "No",
+        "ExDate": "06/01/2026",
+        "ReptManager": "Srinivas Veluvali",
+        "PsManager": "10678612"
+      },
+      {
+        "Pernr": "00277012",
+        "Ename": "Employee Two",
+        "ProjectId": "14918-02",
+        "ProjectName": "Program APAC",
+        "StartDate": "03/01/2025",
+        "EndDate": "12/31/9999",
+        "Allocation": "100.00",
+        "Resigned": "Yes",
+        "ExDate": "06/01/2026",
+        "ReptManager": "Deepak Vupperige",
+        "PsManager": "10604831"
+      }
+    ]
+  }
+}

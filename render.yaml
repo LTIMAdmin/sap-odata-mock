@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sap-odata-mock
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: MOCK_REQUIRE_AUTH
+        value: "true"
+      - key: MOCK_USER
+        value: "demo"
+      - key: MOCK_PASS
+        value: "demo123"
+      - key: MOCK_EXDATE
+        value: "06/01/2026"
