@@ -164,28 +164,28 @@ def _replicate_rows(rows: list[dict[str, Any]], factor: int) -> list[dict[str, A
 
 
 def _load_dataset() -> list[dict[str, Any]]:
-    if not MOCK_SOURCE_FILE:
-        return _build_dataset()
+    rows: list[dict[str, Any]] = []
 
-    src = Path(MOCK_SOURCE_FILE)
-    if not src.exists() or not src.is_file():
-        return _build_dataset()
+    if MOCK_SOURCE_FILE:
+        src = Path(MOCK_SOURCE_FILE)
+        if src.exists() and src.is_file():
+            try:
+                payload = json.loads(src.read_text(encoding="utf-8"))
+                raw_rows = _extract_rows(payload)
+                if raw_rows:
+                    rows = [_normalize_row(row) for row in raw_rows]
+                    rows = _replicate_rows(rows, max(1, MOCK_REPLICATE_FACTOR))
+            except Exception:  # noqa: BLE001
+                rows = []
 
-    try:
-        payload = json.loads(src.read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001
-        return _build_dataset()
+    # Fall back to synthetic if nothing loaded from file.
+    if not rows:
+        rows = _build_dataset(count=MOCK_LIMIT_ROWS if MOCK_LIMIT_ROWS > 0 else 1200)
 
-    raw_rows = _extract_rows(payload)
-    if not raw_rows:
-        return _build_dataset()
-
-    mapped = [_normalize_row(row) for row in raw_rows]
-    expanded = _replicate_rows(mapped, max(1, MOCK_REPLICATE_FACTOR))
-
+    # MOCK_LIMIT_ROWS always applies regardless of source.
     if MOCK_LIMIT_ROWS > 0:
-        return expanded[:MOCK_LIMIT_ROWS]
-    return expanded
+        return rows[:MOCK_LIMIT_ROWS]
+    return rows
 
 
 DATASET = _load_dataset()
