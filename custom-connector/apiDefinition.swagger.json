@@ -5,8 +5,8 @@
     "description": "Solution-aware connector for retrieving approved SAP movement events.",
     "version": "1.0"
   },
-  "host": "sap-odata-mock.onrender.com",
-  "basePath": "/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV",
+  "host": "@environmentVariables(\"ltm_SAPDeltaApiHost\")",
+  "basePath": "@environmentVariables(\"ltm_SAPDeltaApiBaseUrl\")",
   "schemes": [
     "https"
   ],

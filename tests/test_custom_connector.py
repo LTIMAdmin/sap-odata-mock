@@ -10,9 +10,9 @@ def test_custom_connector_matches_delta_api_contract() -> None:
     connector = json.loads(CONNECTOR_PATH.read_text(encoding="utf-8"))
 
     assert connector["swagger"] == "2.0"
-    assert connector["host"] == "sap-odata-mock.onrender.com"
+    assert connector["host"] == '@environmentVariables("ltm_SAPDeltaApiHost")'
     assert connector["basePath"] == (
-        "/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV"
+        '@environmentVariables("ltm_SAPDeltaApiBaseUrl")'
     )
 
     operation = connector["paths"]["/IT_RESSet"]["get"]

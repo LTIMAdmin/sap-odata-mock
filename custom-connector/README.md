@@ -11,12 +11,12 @@ Create these Text environment variables:
 | SAP Delta API Host | `ltm_SAPDeltaApiHost` | `sap-odata-mock.onrender.com` |
 | SAP Delta API Base URL | `ltm_SAPDeltaApiBaseUrl` | `/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV` |
 
-After importing the OpenAPI definition, set these values on the connector General tab:
+The OpenAPI definition is already configured with these values on the connector General tab:
 
 - Host: `@environmentVariables("ltm_SAPDeltaApiHost")`
 - Base URL: `@environmentVariables("ltm_SAPDeltaApiBaseUrl")`
 
-Power Platform resolves the environment variables when the connector is saved. If a value changes later, resave the custom connector so it picks up the new value.
+Create the connector with both `apiDefinition.swagger.json` and `apiProperties.json`. Power Platform resolves the environment variables when the custom connector is saved. If a value changes later, resave the custom connector so it picks up the new value.
 
 ## Authentication
 
