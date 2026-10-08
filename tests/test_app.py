@@ -1,6 +1,7 @@
 import base64
 import importlib
 import sys
+from collections import Counter
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -43,7 +44,7 @@ def test_delta_endpoint_returns_only_customer_contract_fields(monkeypatch) -> No
 
     assert response.status_code == 200
     rows = response.json()["d"]["results"]
-    assert len(rows) == 2
+    assert len(rows) == 6
     assert set(rows[0]) == {
         "__metadata",
         "LvFlag",
@@ -66,6 +67,33 @@ def test_delta_endpoint_returns_only_customer_contract_fields(monkeypatch) -> No
     assert rows[0]["Psid"] == "00277262"
     assert rows[0]["StartDate"] == "/Date(1788220800000)/"
     assert rows[0]["EndDate"] == "/Date(253402214400000)/"
+    assert Counter(row["EventType"] for row in rows) == {
+        "Project Change": 2,
+        "Location Change": 2,
+        "Retire": 2,
+    }
+
+
+def test_delta_endpoint_has_scenario_appropriate_test_records(monkeypatch) -> None:
+    client = _load_client(monkeypatch)
+
+    response = client.get(
+        "/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV/IT_RESSet",
+        params={"$format": "json", "$orderby": "Psid asc"},
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    rows = response.json()["d"]["results"]
+
+    location_rows = [row for row in rows if row["EventType"] == "Location Change"]
+    assert all(row["OldProjid"] == row["NewProjid"] for row in location_rows)
+    assert all(row["OldLocCode"] != row["NewLocCode"] for row in location_rows)
+
+    retire_rows = [row for row in rows if row["EventType"] == "Retire"]
+    assert all(row["OldProjid"] and not row["NewProjid"] for row in retire_rows)
+    assert all(row["OldIrmid"] and not row["NewIrmid"] for row in retire_rows)
+    assert all(row["OldLocCode"] and not row["NewLocCode"] for row in retire_rows)
 
 
 def test_delta_endpoint_supports_connector_query_parameters(monkeypatch) -> None:

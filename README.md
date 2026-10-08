@@ -47,6 +47,18 @@ Each event contains only:
 
 The old snapshot fields such as `Pernr`, `ProjectId`, `Ename`, `Resigned`, and `ExDate` are no longer returned.
 
+## Flow 2 scenario data
+
+The mock contains six records for testing the three Flow 2 routing branches:
+
+| Event type | Records | Scenario |
+|---|---:|---|
+| `Project Change` | 2 | Original customer samples with different old/new project IDs |
+| `Location Change` | 2 | Synthetic records with the same project and different old/new locations |
+| `Retire` | 2 | Synthetic records with populated old assignment values and blank new assignment values |
+
+The four synthetic records use employee IDs `00279001` through `00279004` and unique `Guid` values. They are test data only and are not customer-provided examples.
+
 ## Supported OData parameters
 
 - `$top`
