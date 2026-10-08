@@ -2,30 +2,50 @@
   "d": {
     "results": [
       {
-        "Pernr": "00123045",
-        "Ename": "N Velliyangiri",
-        "ProjectId": "90004-005",
-        "ProjectName": "Europe-EU",
-        "StartDate": "04/28/2025",
-        "EndDate": "12/31/9999",
-        "Allocation": "100.00",
-        "Resigned": "No",
-        "ExDate": "06/01/2026",
-        "ReptManager": "Srinivas Veluvali",
-        "PsManager": "10678612"
+        "__metadata": {
+          "id": "https://iconnectqas.ltm.info/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV/IT_RESSet('00277262')",
+          "uri": "https://iconnectqas.ltm.info/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV/IT_RESSet('00277262')",
+          "type": "ZODATA_PS_MS_ALLOC_DET_API_SRV.IT_RES"
+        },
+        "LvFlag": "",
+        "Guid": "974bc97f-79f5-1fd1-ab84-508db70efbbc",
+        "Psid": "00277262",
+        "EventType": "Project Change",
+        "OldProjid": "119392-001",
+        "NewProjid": "90025-003",
+        "OldIrmid": "00717210",
+        "OldIrmName": "Ashish Shalu",
+        "NewIrmid": "00717210",
+        "NewIrmName": "Ashish Shalu",
+        "OldLocCode": "220",
+        "OldLocDesc": "Pune-Godrej Eternia Shivajinagar",
+        "NewLocCode": "220",
+        "NewLocDesc": "Pune-Godrej Eternia Shivajinagar",
+        "StartDate": "/Date(1788220800000)/",
+        "EndDate": "/Date(253402214400000)/"
       },
       {
-        "Pernr": "00277012",
-        "Ename": "Employee Two",
-        "ProjectId": "14918-02",
-        "ProjectName": "Program APAC",
-        "StartDate": "03/01/2025",
-        "EndDate": "12/31/9999",
-        "Allocation": "100.00",
-        "Resigned": "Yes",
-        "ExDate": "06/01/2026",
-        "ReptManager": "Deepak Vupperige",
-        "PsManager": "10604831"
+        "__metadata": {
+          "id": "https://iconnectqas.ltm.info/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV/IT_RESSet('00278849')",
+          "uri": "https://iconnectqas.ltm.info/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV/IT_RESSet('00278849')",
+          "type": "ZODATA_PS_MS_ALLOC_DET_API_SRV.IT_RES"
+        },
+        "LvFlag": "",
+        "Guid": "974bc97f-79f5-1fd1-ab84-508db70f1bbc",
+        "Psid": "00278849",
+        "EventType": "Project Change",
+        "OldProjid": "25672-06",
+        "NewProjid": "110286-001",
+        "OldIrmid": "00722023",
+        "OldIrmName": "Karthikeyan",
+        "NewIrmid": "00722023",
+        "NewIrmName": "Karthikeyan",
+        "OldLocCode": "268",
+        "OldLocDesc": "Chennai-Innovation Campus,Tw 2",
+        "NewLocCode": "268",
+        "NewLocDesc": "Chennai-Innovation Campus,Tw 2",
+        "StartDate": "/Date(1788912000000)/",
+        "EndDate": "/Date(1793318400000)/"
       }
     ]
   }

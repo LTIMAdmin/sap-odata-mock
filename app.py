@@ -1,17 +1,18 @@
 import base64
 import json
 import os
-from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
+from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import FastAPI, HTTPException, Request
 
-app = FastAPI(title="SAP OData Mock API", version="1.0.0")
+app = FastAPI(title="SAP Delta OData Mock API", version="2.0.0")
 
-BASE_PATH = "/sap/opu/odata/SAP/ZPS_ODATA_DATALAKE_SRV/PS_MANPOWER_REPORT_DATASet"
-DEFAULT_EXDATE = os.getenv("MOCK_EXDATE", "06/01/2026")
+SERVICE_ROOT = "/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV"
+BASE_PATH = f"{SERVICE_ROOT}/IT_RESSet"
+METADATA_BASE_URL = "https://iconnectqas.ltm.info"
 REQUIRE_AUTH = os.getenv("MOCK_REQUIRE_AUTH", "false").lower() == "true"
 MOCK_USER = os.getenv("MOCK_USER", "demo")
 MOCK_PASS = os.getenv("MOCK_PASS", "demo123")
@@ -19,36 +20,76 @@ MOCK_SOURCE_FILE = os.getenv("MOCK_SOURCE_FILE", "")
 MOCK_REPLICATE_FACTOR = int(os.getenv("MOCK_REPLICATE_FACTOR", "1"))
 MOCK_LIMIT_ROWS = int(os.getenv("MOCK_LIMIT_ROWS", "0"))
 
+SOURCE_FIELDS = (
+    "LvFlag",
+    "Guid",
+    "Psid",
+    "EventType",
+    "OldProjid",
+    "NewProjid",
+    "OldIrmid",
+    "OldIrmName",
+    "NewIrmid",
+    "NewIrmName",
+    "OldLocCode",
+    "OldLocDesc",
+    "NewLocCode",
+    "NewLocDesc",
+    "StartDate",
+    "EndDate",
+)
 
-def _build_dataset(count: int = 1200) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    base_project = 90000
-    managers = ["Srinivas Veluvali", "Deepak Vupperige", "Darshan Hardas", "Ankur Gupta"]
 
-    for i in range(count):
-        emp = f"{123000 + i:08d}"
-        project_num = base_project + (i % 40)
-        project = f"{project_num}-{(i % 10) + 1:03d}"
-        start = date(2025, 1, 1) + timedelta(days=i % 180)
-        end = date(9999, 12, 31)
-        resigned = "Yes" if i % 37 == 0 else "No"
+def _metadata(psid: str) -> dict[str, str]:
+    entity_url = f"{METADATA_BASE_URL}{BASE_PATH}('{psid}')"
+    return {
+        "id": entity_url,
+        "uri": entity_url,
+        "type": "ZODATA_PS_MS_ALLOC_DET_API_SRV.IT_RES",
+    }
 
-        rows.append(
-            {
-                "Pernr": emp,
-                "Ename": f"Employee {i + 1}",
-                "ProjectId": project,
-                "ProjectName": f"Program {project_num}",
-                "StartDate": start.strftime("%m/%d/%Y"),
-                "EndDate": end.strftime("%m/%d/%Y"),
-                "Allocation": "100.00",
-                "Resigned": resigned,
-                "ExDate": DEFAULT_EXDATE,
-                "ReptManager": managers[i % len(managers)],
-                "PsManager": f"{10670000 + i % 200}",
-            }
-        )
-    return rows
+
+def _build_dataset() -> list[dict[str, Any]]:
+    return [
+        {
+            "__metadata": _metadata("00277262"),
+            "LvFlag": "",
+            "Guid": "974bc97f-79f5-1fd1-ab84-508db70efbbc",
+            "Psid": "00277262",
+            "EventType": "Project Change",
+            "OldProjid": "119392-001",
+            "NewProjid": "90025-003",
+            "OldIrmid": "00717210",
+            "OldIrmName": "Ashish Shalu",
+            "NewIrmid": "00717210",
+            "NewIrmName": "Ashish Shalu",
+            "OldLocCode": "220",
+            "OldLocDesc": "Pune-Godrej Eternia Shivajinagar",
+            "NewLocCode": "220",
+            "NewLocDesc": "Pune-Godrej Eternia Shivajinagar",
+            "StartDate": "/Date(1788220800000)/",
+            "EndDate": "/Date(253402214400000)/",
+        },
+        {
+            "__metadata": _metadata("00278849"),
+            "LvFlag": "",
+            "Guid": "974bc97f-79f5-1fd1-ab84-508db70f1bbc",
+            "Psid": "00278849",
+            "EventType": "Project Change",
+            "OldProjid": "25672-06",
+            "NewProjid": "110286-001",
+            "OldIrmid": "00722023",
+            "OldIrmName": "Karthikeyan",
+            "NewIrmid": "00722023",
+            "NewIrmName": "Karthikeyan",
+            "OldLocCode": "268",
+            "OldLocDesc": "Chennai-Innovation Campus,Tw 2",
+            "NewLocCode": "268",
+            "NewLocDesc": "Chennai-Innovation Campus,Tw 2",
+            "StartDate": "/Date(1788912000000)/",
+            "EndDate": "/Date(1793318400000)/",
+        },
+    ]
 
 
 def _extract_rows(payload: Any) -> list[dict[str, Any]]:
@@ -74,72 +115,24 @@ def _extract_rows(payload: Any) -> list[dict[str, Any]]:
     return []
 
 
-def _get_first_value(row: dict[str, Any], keys: list[str], default: str = "") -> Any:
-    for key in keys:
-        if key in row and row[key] not in (None, ""):
-            return row[key]
-    return default
+def _sanitize_row(row: dict[str, Any]) -> dict[str, Any]:
+    sanitized = {"__metadata": row.get("__metadata", {})}
+    sanitized.update({field: row.get(field, "") for field in SOURCE_FIELDS})
 
-
-def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
-    # Keep original fields for flexibility.
-    normalized: dict[str, Any] = dict(row)
-
-    # Add canonical aliases expected by your flow.
-    normalized.setdefault(
-        "Pernr",
-        _get_first_value(row, ["Pernr", "pernr", "EmployeeId", "employeeId", "EmpId", "empId"], ""),
-    )
-    normalized.setdefault(
-        "Ename",
-        _get_first_value(row, ["Ename", "ename", "EmployeeName", "employeeName", "Name", "name"], ""),
-    )
-    normalized.setdefault(
-        "ProjectId",
-        _get_first_value(
-            row,
-            ["ProjectId", "projectId", "NewProjectId", "newProjectId", "ToProjectId", "toProjectId"],
-            "",
-        ),
-    )
-    normalized.setdefault(
-        "ProjectName",
-        _get_first_value(row, ["ProjectName", "projectName", "NewProjectName", "newProjectName"], ""),
-    )
-    normalized.setdefault(
-        "StartDate",
-        _get_first_value(row, ["StartDate", "startDate", "AllocationStartDate", "allocationStartDate"], ""),
-    )
-    normalized.setdefault(
-        "EndDate",
-        _get_first_value(row, ["EndDate", "endDate", "AllocationEndDate", "allocationEndDate"], "12/31/9999"),
-    )
-    normalized.setdefault(
-        "Allocation",
-        _get_first_value(row, ["Allocation", "allocation", "AllocationPct", "allocationPct"], "100.00"),
-    )
-    normalized.setdefault(
-        "Resigned",
-        _get_first_value(row, ["Resigned", "resigned", "IsResigned", "isResigned"], "No"),
-    )
-    normalized.setdefault(
-        "ExDate",
-        _get_first_value(
-            row,
-            ["ExDate", "exDate", "ExtractDate", "extractDate", "EventDate", "eventDate"],
-            DEFAULT_EXDATE,
-        ),
-    )
-    normalized.setdefault(
-        "ReptManager",
-        _get_first_value(row, ["ReptManager", "reptManager", "Manager", "manager"], ""),
-    )
-    normalized.setdefault(
-        "PsManager",
-        _get_first_value(row, ["PsManager", "psManager", "ManagerId", "managerId"], ""),
-    )
-
-    return normalized
+    psid = str(sanitized["Psid"])
+    if not isinstance(sanitized["__metadata"], dict):
+        sanitized["__metadata"] = _metadata(psid)
+    else:
+        sanitized["__metadata"] = {
+            "id": str(sanitized["__metadata"].get("id", _metadata(psid)["id"])),
+            "uri": str(sanitized["__metadata"].get("uri", _metadata(psid)["uri"])),
+            "type": str(
+                sanitized["__metadata"].get(
+                    "type", "ZODATA_PS_MS_ALLOC_DET_API_SRV.IT_RES"
+                )
+            ),
+        }
+    return sanitized
 
 
 def _replicate_rows(rows: list[dict[str, Any]], factor: int) -> list[dict[str, Any]]:
@@ -148,16 +141,15 @@ def _replicate_rows(rows: list[dict[str, Any]], factor: int) -> list[dict[str, A
 
     expanded: list[dict[str, Any]] = []
     for batch in range(factor):
-        for i, row in enumerate(rows):
-            new_row = dict(row)
+        for row in rows:
+            new_row = _sanitize_row(row)
 
-            # Keep records unique across replicated batches.
             if batch > 0:
-                pernr = str(new_row.get("Pernr", ""))
-                if pernr:
-                    new_row["Pernr"] = f"{pernr}-{batch:03d}"
-                else:
-                    new_row["Pernr"] = f"MOCK-{i + 1:08d}-{batch:03d}"
+                original_psid = str(new_row["Psid"])
+                new_psid = f"{int(original_psid) + (batch * 100000):08d}"
+                new_row["Psid"] = new_psid
+                new_row["Guid"] = str(uuid5(NAMESPACE_URL, f"{new_row['Guid']}:{batch}"))
+                new_row["__metadata"] = _metadata(new_psid)
 
             expanded.append(new_row)
     return expanded
@@ -173,16 +165,14 @@ def _load_dataset() -> list[dict[str, Any]]:
                 payload = json.loads(src.read_text(encoding="utf-8"))
                 raw_rows = _extract_rows(payload)
                 if raw_rows:
-                    rows = [_normalize_row(row) for row in raw_rows]
+                    rows = [_sanitize_row(row) for row in raw_rows]
                     rows = _replicate_rows(rows, max(1, MOCK_REPLICATE_FACTOR))
-            except Exception:  # noqa: BLE001
+            except (OSError, json.JSONDecodeError, TypeError, ValueError):
                 rows = []
 
-    # Fall back to synthetic if nothing loaded from file.
     if not rows:
-        rows = _build_dataset(count=MOCK_LIMIT_ROWS if MOCK_LIMIT_ROWS > 0 else 1200)
+        rows = _replicate_rows(_build_dataset(), max(1, MOCK_REPLICATE_FACTOR))
 
-    # MOCK_LIMIT_ROWS always applies regardless of source.
     if MOCK_LIMIT_ROWS > 0:
         return rows[:MOCK_LIMIT_ROWS]
     return rows
@@ -214,29 +204,24 @@ def _apply_filter(rows: list[dict[str, Any]], filter_expr: str | None) -> list[d
     if not filter_expr:
         return rows
 
-    # Supports simple clauses joined by 'and': Field eq 'Value'
     clauses = [c.strip() for c in filter_expr.split(" and ") if c.strip()]
 
     def row_matches(row: dict[str, Any]) -> bool:
         for clause in clauses:
             if " eq " not in clause:
-                continue
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported $filter clause: {clause}",
+                )
             left, right = clause.split(" eq ", 1)
             field = left.strip()
             value = right.strip().strip("'")
 
-            # These are SAP parameter-style filters used in your tests.
-            # They are accepted and treated as request-level constraints.
-            if field in {"IStartDate", "IEndDate", "IInterfaceId", "ISystemId"}:
-                if field == "IStartDate" and value != DEFAULT_EXDATE:
-                    return False
-                if field == "IEndDate" and value != DEFAULT_EXDATE:
-                    return False
-                if field == "IInterfaceId" and value != "PS_MANPOWER_RPT":
-                    return False
-                if field == "ISystemId" and value != "DATALAKE":
-                    return False
-                continue
+            if field not in SOURCE_FIELDS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported $filter field: {field}",
+                )
 
             current = str(row.get(field, ""))
             if current != value:
@@ -252,6 +237,10 @@ def _apply_order(rows: list[dict[str, Any]], order_expr: str | None) -> list[dic
 
     parts = order_expr.strip().split()
     key = parts[0]
+    if key not in SOURCE_FIELDS:
+        raise HTTPException(status_code=400, detail=f"Unsupported $orderby field: {key}")
+    if len(parts) > 1 and parts[1].lower() not in {"asc", "desc"}:
+        raise HTTPException(status_code=400, detail="Use asc or desc for $orderby")
     reverse = len(parts) > 1 and parts[1].lower() == "desc"
     return sorted(rows, key=lambda r: str(r.get(key, "")), reverse=reverse)
 
@@ -263,6 +252,12 @@ def _apply_select(rows: list[dict[str, Any]], select_expr: str | None) -> list[d
     fields = [f.strip() for f in select_expr.split(",") if f.strip()]
     if not fields:
         return rows
+    unsupported = [field for field in fields if field not in SOURCE_FIELDS]
+    if unsupported:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported $select fields: {', '.join(unsupported)}",
+        )
     return [{k: row.get(k) for k in fields} for row in rows]
 
 
@@ -282,6 +277,8 @@ def health() -> dict[str, Any]:
     return {
         "name": "sap-odata-mock",
         "status": "ok",
+        "service": "ZODATA_PS_MS_ALLOC_DET_API_SRV",
+        "entitySet": "IT_RESSet",
         "path": BASE_PATH,
         "records": len(DATASET),
         "sourceFile": MOCK_SOURCE_FILE or "synthetic-default",
@@ -290,15 +287,25 @@ def health() -> dict[str, Any]:
 
 
 @app.get(BASE_PATH)
-def manpower_dataset(request: Request) -> dict[str, Any]:
+def delta_events(request: Request) -> dict[str, Any]:
     _check_auth(request)
 
     q = request.query_params
-    top = int(q.get("$top", "200"))
-    skip = int(q.get("$skip", "0"))
+    try:
+        top = int(q.get("$top", "200"))
+        skip = int(q.get("$skip", "0"))
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400, detail="$top and $skip must be integers"
+        ) from exc
+
     orderby = q.get("$orderby")
     select = q.get("$select")
     filter_expr = q.get("$filter")
+    response_format = q.get("$format", "json")
+
+    if response_format.lower() != "json":
+        raise HTTPException(status_code=400, detail="Only $format=json is supported")
 
     top = max(1, min(top, 500))
     skip = max(0, skip)
@@ -317,3 +324,13 @@ def manpower_dataset(request: Request) -> dict[str, Any]:
             "__next": next_url,
         }
     }
+
+
+@app.get(f"{BASE_PATH}('{{psid}}')")
+def delta_event_by_psid(psid: str, request: Request) -> dict[str, Any]:
+    _check_auth(request)
+
+    for row in DATASET:
+        if str(row.get("Psid", "")) == psid:
+            return {"d": row}
+    raise HTTPException(status_code=404, detail="SAP delta event not found")

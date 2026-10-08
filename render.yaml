@@ -11,5 +11,9 @@ services:
         value: "demo"
       - key: MOCK_PASS
         value: "demo123"
-      - key: MOCK_EXDATE
-        value: "06/01/2026"
+      - key: MOCK_SOURCE_FILE
+        value: "/app/sap-response.actual.json"
+      - key: MOCK_REPLICATE_FACTOR
+        value: "1"
+      - key: MOCK_LIMIT_ROWS
+        value: "0"

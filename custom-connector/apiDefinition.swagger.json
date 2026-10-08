@@ -1,0 +1,237 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "LTIM SAP Delta API",
+    "description": "Solution-aware connector for retrieving approved SAP movement events.",
+    "version": "1.0"
+  },
+  "host": "sap-odata-mock.onrender.com",
+  "basePath": "/sap/opu/odata/sap/ZODATA_PS_MS_ALLOC_DET_API_SRV",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/IT_RESSet": {
+      "get": {
+        "summary": "Get SAP delta events",
+        "description": "Retrieves approved project, location, and employment movement events from SAP.",
+        "operationId": "GetDeltaEvents",
+        "x-ms-visibility": "important",
+        "parameters": [
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Maximum number of records to return.",
+            "required": false,
+            "type": "integer",
+            "default": 200,
+            "minimum": 1,
+            "maximum": 500,
+            "x-ms-summary": "Top"
+          },
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Number of records to skip.",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "x-ms-summary": "Skip"
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "OData equality filters joined with and.",
+            "required": false,
+            "type": "string",
+            "x-ms-summary": "Filter"
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Field and direction, for example Psid asc.",
+            "required": false,
+            "type": "string",
+            "default": "Psid asc",
+            "x-ms-summary": "Order By"
+          },
+          {
+            "name": "$select",
+            "in": "query",
+            "description": "Comma-separated SAP fields to return.",
+            "required": false,
+            "type": "string",
+            "x-ms-summary": "Select"
+          },
+          {
+            "name": "$format",
+            "in": "query",
+            "description": "Response format. Only json is supported.",
+            "required": false,
+            "type": "string",
+            "default": "json",
+            "enum": [
+              "json"
+            ],
+            "x-ms-summary": "Format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SAP OData V2 delta response.",
+            "schema": {
+              "$ref": "#/definitions/ODataDeltaResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid query parameter."
+          },
+          "401": {
+            "description": "Authentication failed."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ODataMetadata": {
+      "type": "object",
+      "required": [
+        "id",
+        "uri",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "DeltaEvent": {
+      "type": "object",
+      "required": [
+        "__metadata",
+        "LvFlag",
+        "Guid",
+        "Psid",
+        "EventType",
+        "OldProjid",
+        "NewProjid",
+        "OldIrmid",
+        "OldIrmName",
+        "NewIrmid",
+        "NewIrmName",
+        "OldLocCode",
+        "OldLocDesc",
+        "NewLocCode",
+        "NewLocDesc",
+        "StartDate",
+        "EndDate"
+      ],
+      "properties": {
+        "__metadata": {
+          "$ref": "#/definitions/ODataMetadata"
+        },
+        "LvFlag": {
+          "type": "string"
+        },
+        "Guid": {
+          "type": "string"
+        },
+        "Psid": {
+          "type": "string"
+        },
+        "EventType": {
+          "type": "string"
+        },
+        "OldProjid": {
+          "type": "string"
+        },
+        "NewProjid": {
+          "type": "string"
+        },
+        "OldIrmid": {
+          "type": "string"
+        },
+        "OldIrmName": {
+          "type": "string"
+        },
+        "NewIrmid": {
+          "type": "string"
+        },
+        "NewIrmName": {
+          "type": "string"
+        },
+        "OldLocCode": {
+          "type": "string"
+        },
+        "OldLocDesc": {
+          "type": "string"
+        },
+        "NewLocCode": {
+          "type": "string"
+        },
+        "NewLocDesc": {
+          "type": "string"
+        },
+        "StartDate": {
+          "type": "string"
+        },
+        "EndDate": {
+          "type": "string"
+        }
+      }
+    },
+    "ODataDeltaEnvelope": {
+      "type": "object",
+      "required": [
+        "results"
+      ],
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeltaEvent"
+          }
+        },
+        "__next": {
+          "type": "string",
+          "x-nullable": true
+        }
+      }
+    },
+    "ODataDeltaResponse": {
+      "type": "object",
+      "required": [
+        "d"
+      ],
+      "properties": {
+        "d": {
+          "$ref": "#/definitions/ODataDeltaEnvelope"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "basic_auth": {
+      "type": "basic"
+    }
+  },
+  "security": [
+    {
+      "basic_auth": []
+    }
+  ],
+  "tags": []
+}
